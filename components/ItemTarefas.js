@@ -1,15 +1,19 @@
 import {Image, Text, TouchableOpacity, View, StyleSheet} from 'react-native';
 import CheckBox from '@react-native-community/checkbox';
 
-export const ItemTarefas = ({text, isChecked, setCheck}) => {
+export const ItemTarefas = ({id, text, isChecked, onCheck, onDelete}) => {
+  console.log(text, isChecked);
   return (
     <View style={styles.boxTarefa}>
-      <CheckBox value={isChecked} onValueChange={setCheck} />
+      <CheckBox value={isChecked} onValueChange={onCheck} />
       <View style={styles.tarefa}>
-        <Text>{text}</Text>
+        <Text>
+          {text}
+          {id}
+        </Text>
       </View>
       <View style={styles.trashContainer}>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={onDelete}>
           <Image
             source={require('../assets/lixeira.png')}
             style={styles.lixeira}

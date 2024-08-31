@@ -1,5 +1,5 @@
 import CheckBox from '@react-native-community/checkbox';
-import {useState} from 'react';
+import {useRef, useState} from 'react';
 import {
   Text,
   View,
@@ -17,25 +17,101 @@ import {ItemTarefas} from './components/ItemTarefas';
 
 export default function App() {
   const [items, setItems] = useState([]);
+  const [checkedItems, setCheckedItems] = useState([]);
+  const idCount = useRef(1);
+
   const [text, setText] = useState('');
 
   function addItem() {
-    const newItem = {isChecked: false, text: text};
+    const newItem = {isChecked: false, text: text, id: idCount.current};
+    idCount.current += 1;
     const newList = items.concat(newItem);
-    setItems(newList);
+    if (newItem.text != '') {
+      setItems(newList);
+    }
+    setText('');
   }
 
+  function checkItem(item) {
+    function filterItem(i) {
+      return i.id !== item.id;
+    }
+    const filteredList = items.filter(filterItem);
+    setItems(filteredList);
+
+    const newList = checkedItems.concat(item);
+    setCheckedItems(newList);
+  }
+  function deleteItem(item) {
+    function filterItem(i) {
+      return i.id !== item.id;
+    }
+    const newList = items.filter(filterItem);
+    setItems(newList);
+  }
+  function deleteCheckedItem(item) {
+    function filterItem(i) {
+      return i.id !== item.id;
+    }
+    const newList = checkedItems.filter(filterItem);
+    console.log(newList);
+    setCheckedItems(newList);
+  }
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.titulo}>
-        <Text>To Do List</Text>
+      <View>
+        <Text style={styles.tituloToDo}>To Do List</Text>
       </View>
       {items.map(function (item) {
-        return <ItemTarefas text={item.text} />;
+        function handleCheck(value) {
+          const checkedItem = {
+            ...item,
+            isChecked: value,
+          };
+          checkItem(checkedItem);
+        }
+        function handleDelete() {
+          deleteItem(item);
+        }
+        return (
+          <ItemTarefas
+            key={item.id}
+            id={item.id}
+            text={item.text}
+            isChecked={item.isChecked}
+            onCheck={handleCheck}
+            onDelete={handleDelete}
+          />
+        );
       })}
-      <ItemTarefas text="Tarefa 1" />
+      <View>
+        <Text style={styles.tituloCheckedList}>Is Checked</Text>
+      </View>
+      {checkedItems.map(function (checkedItem) {
+        function handleCheck() {
+          checkItem(checkedItem);
+        }
+        function handleDeleteChecked() {
+          deleteCheckedItem(checkedItem);
+        }
+        return (
+          <ItemTarefas
+            key={checkedItem.id}
+            id={checkedItem.id}
+            text={checkedItem.text}
+            isChecked={checkedItem.isChecked}
+            onCheck={handleCheck}
+            onDelete={handleDeleteChecked}
+          />
+        );
+      })}
       <View style={styles.submitTarefa}>
-        <TextInput style={styles.textInput} onChangeText={setText} />
+        <TextInput
+          style={styles.textInput}
+          onChangeText={setText}
+          onSubmitEditing={addItem}
+          value={text}
+        />
         <TouchableOpacity style={styles.addButton} onPress={addItem}>
           <Image source={require('./assets/add.png')} style={styles.add} />
         </TouchableOpacity>
@@ -52,7 +128,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     //margin: 10
   },
-  titulo: {},
+  tituloToDo: {
+    fontSize: 19,
+    fontWeight: '800',
+    color: 'red',
+  },
+  tituloCheckedList: {
+    fontSize: 19,
+    fontWeight: '800',
+    color: 'green',
+  },
   boxTarefa: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -71,6 +156,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'black',
     flex: 1,
+    borderRadius: 5,
+    marginRight: 4,
   },
   add: {
     height: 20,
