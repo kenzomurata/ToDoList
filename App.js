@@ -17,13 +17,17 @@ import {ItemTarefas} from './components/ItemTarefas';
 
 export default function App() {
   const [items, setItems] = useState([]);
-  const [checkedItems, setCheckedItems] = useState([]);
   const idCount = useRef(1);
 
   const [text, setText] = useState('');
 
   function addItem() {
-    const newItem = {isChecked: false, text: text, id: idCount.current};
+    const newItem = {
+      isChecked: false,
+      text: text,
+      id: idCount.current,
+      isEditMode: false,
+    };
     idCount.current += 1;
     const newList = items.concat(newItem);
     if (newItem.text != '') {
@@ -33,15 +37,16 @@ export default function App() {
   }
 
   function checkItem(item) {
-    function filterItem(i) {
-      return i.id !== item.id;
+    function mapItem(i) {
+      if (item.id == i.id) {
+        return item;
+      }
+      return i;
     }
-    const filteredList = items.filter(filterItem);
-    setItems(filteredList);
-
-    const newList = checkedItems.concat(item);
-    setCheckedItems(newList);
+    const updatedList = items.map(mapItem);
+    setItems(updatedList);
   }
+
   function deleteItem(item) {
     function filterItem(i) {
       return i.id !== item.id;
@@ -49,20 +54,44 @@ export default function App() {
     const newList = items.filter(filterItem);
     setItems(newList);
   }
-  function deleteCheckedItem(item) {
-    function filterItem(i) {
-      return i.id !== item.id;
+
+  function editItem(item) {
+    function editMode(i) {
+      if (item.id == i.id) {
+        i.isEditMode = !i.isEditMode;
+      }
+      return i;
     }
-    const newList = checkedItems.filter(filterItem);
-    console.log(newList);
-    setCheckedItems(newList);
+    const updatedList = items.map(editMode);
+    setItems(updatedList);
   }
+
+  function confirmEditingItem(item, editedText) {
+    function editMode(i) {
+      if (item.id == i.id) {
+        i.isEditMode = !i.isEditMode;
+        item.text = editedText;
+      }
+      return i;
+    }
+    const updatedList = items.map(editMode);
+    setItems(updatedList);
+  }
+
+  const toDoList = items.filter(function (item) {
+    return item.isChecked == false;
+  });
+
+  const checkedList = items.filter(function (item) {
+    return item.isChecked == true;
+  });
+
   return (
     <SafeAreaView style={styles.container}>
       <View>
         <Text style={styles.tituloToDo}>To Do List</Text>
       </View>
-      {items.map(function (item) {
+      {toDoList.map(function (item) {
         function handleCheck(value) {
           const checkedItem = {
             ...item,
@@ -73,35 +102,59 @@ export default function App() {
         function handleDelete() {
           deleteItem(item);
         }
+        function handleEdit() {
+          editItem(item);
+        }
+        function handleConfirmEdit(editedText) {
+          confirmEditingItem(item, editedText);
+        }
+
         return (
           <ItemTarefas
-            key={item.id}
+            key={item.id.toString()}
             id={item.id}
             text={item.text}
             isChecked={item.isChecked}
             onCheck={handleCheck}
             onDelete={handleDelete}
+            onEdit={handleEdit}
+            isEditMode={item.isEditMode}
+            onConfirmEditing={handleConfirmEdit}
           />
         );
       })}
       <View>
         <Text style={styles.tituloCheckedList}>Is Checked</Text>
       </View>
-      {checkedItems.map(function (checkedItem) {
-        function handleCheck() {
+      {checkedList.map(function (item) {
+        function handleCheck(value) {
+          const checkedItem = {
+            ...item,
+            isChecked: value,
+          };
           checkItem(checkedItem);
         }
-        function handleDeleteChecked() {
-          deleteCheckedItem(checkedItem);
+        function handleDelete() {
+          deleteItem(item);
         }
+        function handleEdit() {
+          editItem(item);
+        }
+        function handleConfirmEdit(editedText) {
+          confirmEditingItem(item, editedText);
+        }
+
         return (
           <ItemTarefas
-            key={checkedItem.id}
-            id={checkedItem.id}
-            text={checkedItem.text}
-            isChecked={checkedItem.isChecked}
+            key={item.id.toString()}
+            id={item.id}
+            text={item.text}
+            isChecked={item.isChecked}
             onCheck={handleCheck}
-            onDelete={handleDeleteChecked}
+            onDelete={handleDelete}
+            onEdit={handleEdit}
+            isEditMode={item.isEditMode}
+            onConfirmEditing={handleConfirmEdit}
           />
         );
       })}
